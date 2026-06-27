@@ -4,7 +4,4 @@ dist
 .gitignore
 README.md
 .env
-.eslintrc.js
-jest.config.js
-tsconfig.json
 coverage
