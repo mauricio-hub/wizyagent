@@ -17,7 +17,8 @@ export default function Home() {
     setResponse('');
 
     try {
-      const result = await axios.post('http://localhost:3001/chat', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const result = await axios.post(`${apiUrl}/chat`, {
         model: 'gpt-4',
         input,
       });
