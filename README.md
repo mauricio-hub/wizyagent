@@ -1,152 +1,149 @@
-# Wizybot — AI Customer Support Agent
+# Fullstack AI Agent
 
-AI-powered chatbot with access to product search and currency conversion tools. Built with NestJS, Next.js, and OpenAI.
+An AI-powered chatbot API built with NestJS that can search for products and convert currencies using OpenAI Function Calling.
 
-## Tech Stack
+## Features
 
-- **Backend**: NestJS + TypeScript
-- **Frontend**: Next.js + React + Tailwind CSS
-- **LLM**: OpenAI (gpt-4)
-- **APIs**: Open Exchange Rates
-- **Deployment**: Docker + Railway
-- **CI/CD**: GitHub Actions
+- 🤖 OpenAI GPT-4.1 integration with Function Calling
+- 🔍 Product search from CSV database
+- 💱 Real-time currency conversion via Open Exchange Rates API
+- 📚 Automatic API documentation with Swagger
+- 🎨 Next.js frontend UI
 
 ## Prerequisites
 
 - Node.js 20+
 - npm or yarn
-- Docker & Docker Compose
 - OpenAI API key
 - Open Exchange Rates API key
 
 ## Setup
 
-### 1. Environment Variables
+### 1. Clone the repository
 
-Create `.env` files:
-
-**`backend/.env`**:
+```bash
+git clone <repository-url>
+cd fullstack-agent
 ```
-OPENAI_API_KEY=your-openai-key
-EXCHANGE_RATES_API_KEY=your-exchange-rates-key
+
+### 2. Backend Setup
+
+```bash
+cd backend
+npm install
+```
+
+Create `.env` file in `backend/`:
+```
+OPENAI_API_KEY=your_openai_api_key
+EXCHANGE_RATES_API_KEY=your_exchange_rates_api_key
 PORT=3001
 ```
 
-**`frontend/.env.local`**:
+### 3. Frontend Setup
+
+```bash
+cd frontend
+npm install
+```
+
+Create `.env.local` file in `frontend/`:
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-### 2. Install Dependencies
+## Running Locally
 
-```bash
-# Backend
-cd backend
-npm install
+### Terminal 1 - Backend
 
-# Frontend
-cd ../frontend
-npm install
-```
-
-## Development
-
-Run both services locally:
-
-**Terminal 1 - Backend**:
 ```bash
 cd backend
 npm run start:dev
 ```
 
-**Terminal 2 - Frontend**:
+Backend runs on `http://localhost:3001`
+
+API Documentation: `http://localhost:3001/api/docs`
+
+### Terminal 2 - Frontend
+
 ```bash
 cd frontend
 npm run dev
 ```
 
-Access the app at **http://localhost:3000**
+Frontend runs on `http://localhost:3000`
 
-## Docker
+## API Usage
 
-Run everything with Docker Compose:
+### POST /chat
 
-```bash
-docker-compose up
-```
+Send a user query to the chatbot.
 
-## API Endpoints
-
-### Chat Endpoint
-
-**POST** `/chat`
-
-Request:
+**Request:**
 ```json
 {
-  "model": "gpt-4",
-  "input": "I am looking for a phone"
+  "input": "Do you have any iPhones in stock? What's the price in EUR?"
 }
 ```
 
-Response:
+**Response:**
 ```json
 {
-  "response": "Based on your search, I found..."
+  "response": "Yes, we have iPhones in stock...",
+  "products": [
+    {
+      "displayTitle": "iPhone 12",
+      "price": "900.0 USD",
+      "imageUrl": "https://...",
+      "url": "https://..."
+    }
+  ],
+  "conversions": [
+    {
+      "from": "900 USD",
+      "to": "790.20 EUR"
+    }
+  ]
 }
 ```
 
-## Testing
+**Try with Swagger:** `http://localhost:3001/api/docs`
 
-```bash
-# Backend
-cd backend
-npm run test
+## Example Queries
 
-# Frontend
-cd frontend
-npm run test
-```
+- "I am looking for a phone"
+- "I am looking for a present for my dad"
+- "How much does a watch cost?"
+- "What is the price of the watch in Euros?"
+- "How many Canadian Dollars are 350 Euros?"
 
-## Build
+## Architecture
 
-```bash
-# Backend
-cd backend
-npm run build
+### Backend (NestJS)
 
-# Frontend
-cd frontend
-npm run build
-```
+- **ChatController** — REST endpoint `/chat`
+- **ChatService** — OpenAI Function Calling orchestration
+- **SearchProductsService** — CSV product search
+- **ConvertCurrenciesService** — Currency conversion via API
+
+### Frontend (Next.js)
+
+- Clean chat UI with product cards
+- Real-time currency conversion display
+- Responsive design with Tailwind CSS
 
 ## Deployment
 
-Deployed on Railway with automatic CI/CD pipeline:
+The app is deployed on Railway with auto-deploy on push.
 
-1. Push to GitHub
-2. GitHub Actions runs lint, test, build
-3. If all pass, Railway auto-deploys
+**Production URLs:**
+- Backend: `https://wizyagent-production.up.railway.app`
+- Frontend: `https://friendly-laughter-production.up.railway.app`
 
-## Project Structure
+## Technologies
 
-```
-wizyagent/
-├── backend/
-│   ├── src/
-│   │   ├── chat/
-│   │   ├── providers/
-│   │   └── main.ts
-│   ├── package.json
-│   └── Dockerfile
-├── frontend/
-│   ├── app/
-│   ├── package.json
-│   └── Dockerfile
-├── docker-compose.yml
-└── README.md
-```
-
-## License
-
-MIT
+- **Backend:** NestJS, TypeScript, OpenAI API
+- **Frontend:** Next.js 16, React 19, Tailwind CSS
+- **Documentation:** Swagger/OpenAPI
+- **Infrastructure:** Docker, Railway, GitHub Actions CI/CD
