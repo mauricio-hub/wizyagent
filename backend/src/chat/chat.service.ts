@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
 import { ChatQueryDto } from './dtos/chat-query.dto';
@@ -52,7 +53,9 @@ export class ChatService {
     this.openai = new OpenAI({ apiKey });
   }
 
-  async chat(payload: ChatQueryDto): Promise<{ text: string; products: any[]; conversions: Array<{ from: string; to: string }> }> {
+  async chat(
+    payload: ChatQueryDto,
+  ): Promise<{ text: string; products: object[]; conversions: Array<{ from: string; to: string }> }> {
     const systemPrompt = `You are a helpful product assistant. You can search for products and convert prices between currencies.
 Only respond to questions about products, prices, and currency conversions. If asked about anything else, politely redirect to product-related topics.
 Keep responses concise and focused on the product information you find.`;
@@ -62,7 +65,7 @@ Keep responses concise and focused on the product information you find.`;
       { role: 'user', content: payload.input },
     ];
 
-    const trackedProducts: any[] = [];
+    const trackedProducts: object[] = [];
     const trackedConversions: Array<{ from: string; to: string }> = [];
 
     const model = payload.model || 'gpt-4.1';
@@ -75,9 +78,7 @@ Keep responses concise and focused on the product information you find.`;
 
     input.push(...response.output);
 
-    let iteration = 0;
-    while (response.output.some((item: any) => item.type === 'function_call')) {
-      iteration++;
+    while (response.output.some((item) => (item as any).type === 'function_call')) {
 
       for (const item of response.output) {
         if (item.type !== 'function_call') continue;
@@ -111,9 +112,9 @@ Keep responses concise and focused on the product information you find.`;
       input.push(...response.output);
     }
 
-    const messageItem = response.output.find((item: any) => item.type === 'message');
+    const messageItem = response.output.find((item) => (item as any).type === 'message');
     const text = messageItem
-      ? ((messageItem as any).content?.find((c: any) => c.type === 'output_text')?.text || '')
+      ? (((messageItem as any).content?.find((c: any) => c.type === 'output_text')?.text) || '')
       : '';
 
     return {

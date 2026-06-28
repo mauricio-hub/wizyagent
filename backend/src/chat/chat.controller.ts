@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Body, Controller, Post, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiBadRequestResponse, ApiInternalServerErrorResponse } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
