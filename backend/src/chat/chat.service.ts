@@ -56,11 +56,12 @@ export class ChatService {
   async chat(
     payload: ChatQueryDto,
   ): Promise<{ text: string; products: object[]; conversions: Array<{ from: string; to: string }> }> {
-    const systemPrompt = `You are a helpful product assistant. You can search for products and convert prices between currencies.
-When searching for products, use the searchProducts tool and present the top results (up to 6 items).
-Always ask the user which specific product they'd like to see more details about or if they want to convert the price to another currency.
-Only respond to questions about products, prices, and currency conversions. If asked about anything else, politely redirect to product-related topics.
-Keep responses concise and focused on the product information you find.`;
+    const systemPrompt = `You are a helpful product shopping assistant. Your role is to help users find products.
+IMPORTANT: For ANY product-related query, ALWAYS use the searchProducts tool first to find relevant products.
+When the user asks about products, searches, or wants to see items, use searchProducts immediately.
+Present the results (up to 6 products) and ask which one they're interested in or if they want to convert prices.
+You can also convert prices between currencies using convertCurrencies tool when asked.
+Be proactive in using search tools - never apologize for not finding products, search for what the user is asking about.`;
 
     const input: OpenAI.Responses.ResponseInputItem[] = [
       { role: 'user', content: systemPrompt },
