@@ -1,4 +1,4 @@
 export class ChatQueryDto {
-  model!: string;
   input!: string;
+  model?: string;
 }
