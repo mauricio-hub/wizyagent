@@ -1,8 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Send, Loader, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Send,
+  Loader2,
+  X,
+  Sparkles,
+  ShoppingBag,
+  ArrowRightLeft,
+  ExternalLink,
+  Bot,
+  User,
+} from 'lucide-react';
 
 interface Product {
   displayTitle: string;
@@ -27,12 +38,20 @@ interface Message {
   content: ChatResponse | string;
 }
 
+const SUGGESTIONS = [
+  'Show me popular products',
+  'Convert 100 USD to EUR',
+  'What deals do you have today?',
+];
+
 export default function Home() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedImage, setSelectedImage] = useState<{ url: string; title: string } | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChat = async (query?: string) => {
     const message = query || input;
@@ -64,161 +83,347 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [input]);
+
   return (
-    <div className="fixed inset-0 bg-slate-950 flex flex-col">
-      {messages.length > 0 && (
-        <div className="bg-slate-900 border-b border-slate-800 px-4 md:px-8 py-4">
-          <div className="flex items-center gap-3 max-w-3xl mx-auto">
-            <div className="text-3xl">🤖</div>
+    <div className="fixed inset-0 flex flex-col bg-[#09090b] text-zinc-100 font-sans overflow-hidden">
+      {/* Ambient background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-[40%] -left-[20%] h-[70%] w-[70%] rounded-full bg-violet-600/10 blur-[120px]" />
+        <div className="absolute -top-[20%] -right-[15%] h-[60%] w-[55%] rounded-full bg-cyan-500/8 blur-[100px]" />
+        <div className="absolute -bottom-[30%] left-[20%] h-[50%] w-[50%] rounded-full bg-indigo-600/8 blur-[110px]" />
+        <div
+          className="absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0)',
+            backgroundSize: '32px 32px',
+          }}
+        />
+      </div>
+
+      {/* Sticky header */}
+      <header className="relative z-20 shrink-0 border-b border-white/[0.06] bg-[#09090b]/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3.5 md:px-6">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/20">
+              <Sparkles className="h-4 w-4 text-white" />
+              <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
+            </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Wizybot</h1>
-              <p className="text-xs text-gray-400">AI Shopping Assistant</p>
+              <h1 className="text-[15px] font-semibold tracking-tight text-white">Wizybot</h1>
+              <p className="text-[11px] text-zinc-500">AI Shopping Assistant</p>
             </div>
           </div>
+          {messages.length > 0 && (
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11px] text-zinc-400"
+            >
+              {messages.length} messages
+            </motion.span>
+          )}
         </div>
-      )}
+      </header>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
-        <div className="max-w-3xl mx-auto space-y-6 w-full">
-          {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center pt-20">
-              <div className="text-7xl mb-6">🤖</div>
-              <h2 className="text-3xl font-bold text-white mb-3">Wizybot</h2>
-              <p className="text-gray-400 text-lg max-w-md">
-                Ask about products, prices, or currency conversions
-              </p>
-            </div>
-          ) : (
-            messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex gap-3 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+      {/* Main content */}
+      <main className="relative z-10 flex-1 overflow-y-auto">
+        {messages.length === 0 ? (
+          <div className="flex min-h-full flex-col items-center justify-center px-4 pb-36 pt-8">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full max-w-2xl text-center"
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1, duration: 0.5, type: 'spring', stiffness: 200 }}
+                className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-600/20 ring-1 ring-white/10"
               >
-                {msg.type === 'agent' && <div className="text-2xl flex-shrink-0">🤖</div>}
-                <div
-                  className={`max-w-md lg:max-w-lg ${
-                    msg.type === 'user'
-                      ? 'bg-white text-slate-950 rounded-3xl rounded-tr-none'
-                      : 'bg-slate-800 text-gray-100 rounded-3xl rounded-tl-none border border-slate-700'
-                  } p-4 space-y-4`}
+                <Bot className="h-10 w-10 text-violet-400" />
+              </motion.div>
+
+              <h2 className="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-4xl font-bold tracking-tight text-transparent md:text-5xl">
+                What can I help you find?
+              </h2>
+              <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-zinc-500">
+                Ask about products, compare prices, or convert currencies — powered by AI.
+              </p>
+
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
+                {SUGGESTIONS.map((suggestion, i) => (
+                  <motion.button
+                    key={suggestion}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + i * 0.08, duration: 0.4 }}
+                    whileHover={{ scale: 1.02, borderColor: 'rgba(255,255,255,0.15)' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleChat(suggestion)}
+                    className="rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-[13px] text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
+                  >
+                    {suggestion}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 md:px-6">
+            <AnimatePresence initial={false}>
+              {messages.map((msg, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  className={`flex gap-3 ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
                 >
-                  {msg.type === 'user' ? (
-                    <p className="text-sm">{msg.content}</p>
-                  ) : (
-                    <>
-                      <p className="text-sm leading-relaxed">{(msg.content as ChatResponse).response}</p>
+                  {/* Avatar */}
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                      msg.type === 'user'
+                        ? 'bg-zinc-800 ring-1 ring-white/10'
+                        : 'bg-gradient-to-br from-violet-500/20 to-indigo-600/20 ring-1 ring-violet-500/20'
+                    }`}
+                  >
+                    {msg.type === 'user' ? (
+                      <User className="h-4 w-4 text-zinc-400" />
+                    ) : (
+                      <Bot className="h-4 w-4 text-violet-400" />
+                    )}
+                  </div>
 
-                      {(msg.content as ChatResponse).products &&
-                        (msg.content as ChatResponse).products!.length > 0 && (
-                          <div className="pt-3 border-t border-slate-700 space-y-2">
-                            {(msg.content as ChatResponse).products!.map((product, i) => (
-                              <button
-                                key={i}
-                                onClick={() =>
-                                  setSelectedImage({
-                                    url: product.imageUrl,
-                                    title: product.displayTitle,
-                                  })
-                                }
-                                className="w-full flex items-center gap-3 bg-slate-700 hover:bg-slate-600 rounded-lg p-3 transition text-left"
-                              >
-                                <img
-                                  src={product.imageUrl}
-                                  alt={product.displayTitle}
-                                  className="w-16 h-16 object-cover rounded"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-semibold truncate text-gray-100 text-sm">
-                                    {product.displayTitle}
-                                  </p>
-                                  <p className="text-blue-400 font-bold text-sm">{product.price}</p>
+                  {/* Bubble */}
+                  <div
+                    className={`max-w-[85%] space-y-3 sm:max-w-[75%] ${
+                      msg.type === 'user' ? 'items-end' : 'items-start'
+                    }`}
+                  >
+                    <div
+                      className={`rounded-2xl px-4 py-3 ${
+                        msg.type === 'user'
+                          ? 'bg-white text-zinc-900 shadow-lg shadow-black/20'
+                          : 'border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm'
+                      }`}
+                    >
+                      {msg.type === 'user' ? (
+                        <p className="text-[14px] leading-relaxed">{msg.content as string}</p>
+                      ) : (
+                        <>
+                          <p className="text-[14px] leading-relaxed text-zinc-200">
+                            {(msg.content as ChatResponse).response}
+                          </p>
+
+                          {(msg.content as ChatResponse).products &&
+                            (msg.content as ChatResponse).products!.length > 0 && (
+                              <div className="mt-4 space-y-2">
+                                <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                                  <ShoppingBag className="h-3 w-3" />
+                                  Products
                                 </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                                <div className="grid gap-2">
+                                  {(msg.content as ChatResponse).products!.map((product, i) => (
+                                    <motion.button
+                                      key={i}
+                                      whileHover={{ scale: 1.01 }}
+                                      whileTap={{ scale: 0.99 }}
+                                      onClick={() =>
+                                        setSelectedImage({
+                                          url: product.imageUrl,
+                                          title: product.displayTitle,
+                                        })
+                                      }
+                                      className="group flex w-full items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] p-2.5 text-left transition-colors hover:border-white/[0.12] hover:bg-white/[0.06]"
+                                    >
+                                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+                                        <img
+                                          src={product.imageUrl}
+                                          alt={product.displayTitle}
+                                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                        />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-[13px] font-medium text-zinc-200">
+                                          {product.displayTitle}
+                                        </p>
+                                        <p className="mt-0.5 text-[13px] font-semibold text-violet-400">
+                                          {product.price}
+                                        </p>
+                                      </div>
+                                    
+                                    </motion.button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
 
-                      {(msg.content as ChatResponse).conversions &&
-                        (msg.content as ChatResponse).conversions!.length > 0 && (
-                          <div className="pt-3 border-t border-slate-700 space-y-2">
-                            {(msg.content as ChatResponse).conversions!.map((conv, i) => (
-                              <p key={i} className="text-sm text-gray-300">
-                                <span className="font-semibold text-blue-400">{conv.from}</span> →{' '}
-                                <span className="font-semibold text-green-400">{conv.to}</span>
-                              </p>
-                            ))}
-                          </div>
-                        )}
-                    </>
-                  )}
+                          {(msg.content as ChatResponse).conversions &&
+                            (msg.content as ChatResponse).conversions!.length > 0 && (
+                              <div className="mt-4 space-y-2">
+                                <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                                  <ArrowRightLeft className="h-3 w-3" />
+                                  Conversions
+                                </div>
+                                <div className="grid gap-2">
+                                  {(msg.content as ChatResponse).conversions!.map((conv, i) => (
+                                    <div
+                                      key={i}
+                                      className="flex items-center gap-3 rounded-xl border border-emerald-500/10 bg-emerald-500/[0.06] px-4 py-3"
+                                    >
+                                      <span className="text-[13px] font-medium text-zinc-300">
+                                        {conv.from}
+                                      </span>
+                                      <ArrowRightLeft className="h-3.5 w-3.5 shrink-0 text-emerald-500/60" />
+                                      <span className="text-[13px] font-semibold text-emerald-400">
+                                        {conv.to}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {loading && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex gap-3"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500/20 to-indigo-600/20 ring-1 ring-violet-500/20">
+                  <Bot className="h-4 w-4 text-violet-400" />
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.04] px-4 py-3 backdrop-blur-sm">
+                  <Loader2 className="h-4 w-4 animate-spin text-violet-400" />
+                  <div className="flex items-center gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <motion.span
+                        key={i}
+                        className="h-1.5 w-1.5 rounded-full bg-zinc-500"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3"
+                >
+                  <p className="text-[13px] text-red-400">{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+      </main>
+
+      {/* Floating input */}
+      <div className="relative z-20 shrink-0 px-4 pb-5 pt-2 md:px-6">
+        <div className="pointer-events-none absolute inset-x-0 -top-12 h-12 bg-gradient-to-t from-[#09090b] to-transparent" />
+        <div className="mx-auto max-w-3xl">
+          <motion.div
+            layout
+            className="flex items-end gap-2 rounded-2xl border border-white/[0.08] bg-zinc-900/80 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl ring-1 ring-white/[0.04]"
+          >
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask about products or prices..."
+              rows={1}
+              className="max-h-40 min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-[14px] text-zinc-100 placeholder-zinc-600 outline-none"
+            />
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleChat()}
+              disabled={loading || !input.trim()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-500/25 transition-opacity disabled:opacity-30 disabled:shadow-none"
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </motion.button>
+          </motion.div>
+          <p className="mt-2 text-center text-[11px] text-zinc-600">
+            Enter to send · Shift + Enter for new line
+          </p>
+        </div>
+      </div>
+
+      {/* Image modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+            onClick={() => setSelectedImage(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full max-w-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl">
+                <img
+                  src={selectedImage.url}
+                  alt={selectedImage.title}
+                  className="w-full object-cover"
+                />
+                <div className="border-t border-white/[0.06] px-4 py-3">
+                  <p className="text-center text-[13px] font-medium text-zinc-200">
+                    {selectedImage.title}
+                  </p>
                 </div>
               </div>
-            ))
-          )}
-          {loading && (
-            <div className="flex justify-start gap-3">
-              <div className="text-2xl">🤖</div>
-              <div className="bg-slate-800 border border-slate-700 rounded-3xl rounded-tl-none p-4 flex items-center gap-2">
-                <Loader className="w-4 h-4 animate-spin text-blue-400" />
-                <p className="text-sm text-gray-300">Thinking...</p>
-              </div>
-            </div>
-          )}
-          {error && (
-            <div className="p-3 bg-red-900 bg-opacity-30 border border-red-700 rounded-lg">
-              <p className="text-red-300 text-sm">{error}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Input Area - Fixed at Bottom */}
-      <div className="px-4 md:px-8 py-4 bg-slate-950 border-t border-slate-800">
-        <div className="flex gap-3 max-w-3xl mx-auto">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask about products or prices..."
-            className="flex-1 p-4 bg-slate-800 border border-slate-700 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-slate-600 resize-none shadow-lg"
-            rows={2}
-          />
-          <button
-            onClick={() => handleChat()}
-            disabled={loading || !input.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 rounded-2xl transition flex items-center justify-center shadow-lg font-medium"
-          >
-            {loading ? (
-              <Loader className="w-5 h-5 animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Image Modal */}
-      {selectedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="relative max-w-sm w-full">
-            <img
-              src={selectedImage.url}
-              alt={selectedImage.title}
-              className="w-full rounded-2xl shadow-2xl"
-            />
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100"
-            >
-              <X className="w-5 h-5 text-gray-800" />
-            </button>
-            <div className="mt-3 text-center">
-              <p className="text-white text-sm font-semibold">{selectedImage.title}</p>
-            </div>
-          </div>
-        </div>
-      )}
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-zinc-300 shadow-lg transition-colors hover:bg-zinc-700 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
