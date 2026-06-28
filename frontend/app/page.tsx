@@ -38,10 +38,24 @@ interface Message {
   content: ChatResponse | string;
 }
 
-const SUGGESTIONS = [
-  'Show me popular products',
-  'Convert 100 USD to EUR',
-  'What deals do you have today?',
+interface QuickPrompt {
+  label: string;
+  query: string;
+}
+
+const QUICK_PROMPTS: QuickPrompt[] = [
+  {
+    label: "Women's Ankle Socks",
+    query: "Women's Athletic Ankle Socks",
+  },
+  {
+    label: 'JBL GO 2 Speaker',
+    query: 'JBL GO 2 Bluetooth Portable Waterproof Speaker',
+  },
+  {
+    label: 'PS5 Digital Edition',
+    query: 'Sony PlayStation 5, Digital Edition Video Game Consoles',
+  },
 ];
 
 export default function Home() {
@@ -53,12 +67,13 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleChat = async (query?: string) => {
+  const handleChat = async (query?: string, displayText?: string) => {
     const message = query || input;
+    const userDisplay = displayText ?? message;
     if (!message.trim()) return;
 
     setInput('');
-    setMessages((prev) => [...prev, { type: 'user', content: message }]);
+    setMessages((prev) => [...prev, { type: 'user', content: userDisplay }]);
     setLoading(true);
     setError('');
 
@@ -113,7 +128,7 @@ export default function Home() {
 
       {/* Sticky header */}
       <header className="relative z-20 shrink-0 border-b border-white/[0.06] bg-[#09090b]/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3.5 md:px-6">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-3.5 md:px-8 lg:max-w-6xl">
           <div className="flex items-center gap-3">
             <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/20">
               <Sparkles className="h-4 w-4 text-white" />
@@ -144,7 +159,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full max-w-2xl text-center"
+              className="w-full max-w-3xl text-center"
             >
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -163,25 +178,25 @@ export default function Home() {
               </p>
 
               <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
-                {SUGGESTIONS.map((suggestion, i) => (
+                {QUICK_PROMPTS.map((prompt, i) => (
                   <motion.button
-                    key={suggestion}
+                    key={prompt.label}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 + i * 0.08, duration: 0.4 }}
                     whileHover={{ scale: 1.02, borderColor: 'rgba(255,255,255,0.15)' }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => handleChat(suggestion)}
+                    onClick={() => handleChat(prompt.query, prompt.label)}
                     className="rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-[13px] text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
                   >
-                    {suggestion}
+                    {prompt.label}
                   </motion.button>
                 ))}
               </div>
             </motion.div>
           </div>
         ) : (
-          <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 md:px-6">
+          <div className="mx-auto w-full max-w-5xl space-y-8 px-5 py-8 md:px-8 lg:max-w-6xl">
             <AnimatePresence initial={false}>
               {messages.map((msg, idx) => (
                 <motion.div
@@ -189,11 +204,11 @@ export default function Home() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className={`flex gap-3 ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+                  className={`flex gap-4 ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
                 >
                   {/* Avatar */}
                   <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                    className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                       msg.type === 'user'
                         ? 'bg-zinc-800 ring-1 ring-white/10'
                         : 'bg-gradient-to-br from-violet-500/20 to-indigo-600/20 ring-1 ring-violet-500/20'
@@ -208,33 +223,35 @@ export default function Home() {
 
                   {/* Bubble */}
                   <div
-                    className={`max-w-[85%] space-y-3 sm:max-w-[75%] ${
-                      msg.type === 'user' ? 'items-end' : 'items-start'
+                    className={`min-w-0 ${
+                      msg.type === 'user'
+                        ? 'max-w-[min(100%,28rem)]'
+                        : 'max-w-[min(100%,calc(100%-3.25rem))] flex-1'
                     }`}
                   >
                     <div
-                      className={`rounded-2xl px-4 py-3 ${
+                      className={`rounded-2xl px-5 py-4 ${
                         msg.type === 'user'
                           ? 'bg-white text-zinc-900 shadow-lg shadow-black/20'
                           : 'border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm'
                       }`}
                     >
                       {msg.type === 'user' ? (
-                        <p className="text-[14px] leading-relaxed">{msg.content as string}</p>
+                        <p className="text-[15px] leading-relaxed">{msg.content as string}</p>
                       ) : (
                         <>
-                          <p className="text-[14px] leading-relaxed text-zinc-200">
+                          <p className="break-words text-[15px] leading-relaxed text-zinc-200">
                             {(msg.content as ChatResponse).response}
                           </p>
 
                           {(msg.content as ChatResponse).products &&
                             (msg.content as ChatResponse).products!.length > 0 && (
-                              <div className="mt-4 space-y-2">
+                              <div className="mt-5 space-y-3">
                                 <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
                                   <ShoppingBag className="h-3 w-3" />
                                   Products
                                 </div>
-                                <div className="grid gap-2">
+                                <div className="grid gap-3 sm:grid-cols-2">
                                   {(msg.content as ChatResponse).products!.map((product, i) => (
                                     <motion.button
                                       key={i}
@@ -246,9 +263,9 @@ export default function Home() {
                                           title: product.displayTitle,
                                         })
                                       }
-                                      className="group flex w-full items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] p-2.5 text-left transition-colors hover:border-white/[0.12] hover:bg-white/[0.06]"
+                                      className="group flex w-full items-start gap-4 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 text-left transition-colors hover:border-white/[0.12] hover:bg-white/[0.06]"
                                     >
-                                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+                                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
                                         <img
                                           src={product.imageUrl}
                                           alt={product.displayTitle}
@@ -256,14 +273,14 @@ export default function Home() {
                                         />
                                       </div>
                                       <div className="min-w-0 flex-1">
-                                        <p className="truncate text-[13px] font-medium text-zinc-200">
+                                        <p className="line-clamp-2 text-[14px] font-medium leading-snug text-zinc-200">
                                           {product.displayTitle}
                                         </p>
-                                        <p className="mt-0.5 text-[13px] font-semibold text-violet-400">
+                                        <p className="mt-1.5 text-[14px] font-semibold text-violet-400">
                                           {product.price}
                                         </p>
                                       </div>
-                                    
+                                     
                                     </motion.button>
                                   ))}
                                 </div>
@@ -272,22 +289,22 @@ export default function Home() {
 
                           {(msg.content as ChatResponse).conversions &&
                             (msg.content as ChatResponse).conversions!.length > 0 && (
-                              <div className="mt-4 space-y-2">
+                              <div className="mt-5 space-y-3">
                                 <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
                                   <ArrowRightLeft className="h-3 w-3" />
                                   Conversions
                                 </div>
-                                <div className="grid gap-2">
+                                <div className="grid gap-3 sm:grid-cols-2">
                                   {(msg.content as ChatResponse).conversions!.map((conv, i) => (
                                     <div
                                       key={i}
-                                      className="flex items-center gap-3 rounded-xl border border-emerald-500/10 bg-emerald-500/[0.06] px-4 py-3"
+                                      className="flex items-center gap-3 rounded-xl border border-emerald-500/10 bg-emerald-500/[0.06] px-4 py-3.5"
                                     >
-                                      <span className="text-[13px] font-medium text-zinc-300">
+                                      <span className="break-words text-[14px] font-medium text-zinc-300">
                                         {conv.from}
                                       </span>
                                       <ArrowRightLeft className="h-3.5 w-3.5 shrink-0 text-emerald-500/60" />
-                                      <span className="text-[13px] font-semibold text-emerald-400">
+                                      <span className="break-words text-[14px] font-semibold text-emerald-400">
                                         {conv.to}
                                       </span>
                                     </div>
@@ -347,9 +364,9 @@ export default function Home() {
       </main>
 
       {/* Floating input */}
-      <div className="relative z-20 shrink-0 px-4 pb-5 pt-2 md:px-6">
+      <div className="relative z-20 shrink-0 px-5 pb-6 pt-2 md:px-8">
         <div className="pointer-events-none absolute inset-x-0 -top-12 h-12 bg-gradient-to-t from-[#09090b] to-transparent" />
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto w-full max-w-5xl lg:max-w-6xl">
           <motion.div
             layout
             className="flex items-end gap-2 rounded-2xl border border-white/[0.08] bg-zinc-900/80 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl ring-1 ring-white/[0.04]"
