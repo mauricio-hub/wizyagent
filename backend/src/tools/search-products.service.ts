@@ -31,7 +31,7 @@ export class SearchProductsService {
     return scored
       .filter(({ score }) => score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 2)
+      .slice(0, 6)
       .map(({ product }) => product);
   }
 

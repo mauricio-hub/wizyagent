@@ -57,6 +57,8 @@ export class ChatService {
     payload: ChatQueryDto,
   ): Promise<{ text: string; products: object[]; conversions: Array<{ from: string; to: string }> }> {
     const systemPrompt = `You are a helpful product assistant. You can search for products and convert prices between currencies.
+When searching for products, use the searchProducts tool and present the top results (up to 6 items).
+Always ask the user which specific product they'd like to see more details about or if they want to convert the price to another currency.
 Only respond to questions about products, prices, and currency conversions. If asked about anything else, politely redirect to product-related topics.
 Keep responses concise and focused on the product information you find.`;
 
